@@ -29,6 +29,7 @@ const BoxDir = "/box"
 
 type Limits struct {
 	WallTime   time.Duration
+	CPUTime    time.Duration // 0 = same as WallTime
 	MemoryMB   int
 	MaxProcs   int
 	FileSizeMB int
@@ -183,6 +184,15 @@ func signalName(s syscall.Signal) string {
 		return "SIGPIPE"
 	}
 	return fmt.Sprintf("signal %d", int(s))
+}
+
+// cpuSeconds is the RLIMIT_CPU value for l (whole seconds, at least 1).
+func (l Limits) cpuSeconds() int {
+	d := l.CPUTime
+	if d <= 0 || d > l.WallTime {
+		d = l.WallTime
+	}
+	return max(int((d+time.Second-1)/time.Second), 1)
 }
 
 func exists(p string) bool { _, err := os.Stat(p); return err == nil }

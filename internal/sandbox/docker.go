@@ -50,6 +50,7 @@ func (d *dockerBox) Run(ctx context.Context, s Spec) (Result, error) {
 		"--ulimit", "fsize=" + strconv.Itoa(max(l.FileSizeMB, 1)<<20),
 		"--ulimit", "nofile=" + strconv.Itoa(max(l.OpenFiles, 64)),
 		"--ulimit", "core=0",
+		"--ulimit", "cpu=" + strconv.Itoa(l.cpuSeconds()),
 		"-v", s.Dir + ":" + BoxDir + ":rw",
 		"-w", BoxDir,
 		"-e", "HOME=" + BoxDir,

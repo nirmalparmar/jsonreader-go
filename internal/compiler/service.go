@@ -219,7 +219,7 @@ func (s *Service) Execute(ctx context.Context, l *Language, code, stdin string, 
 			res.Phase = "compile"
 			res.ExitCode, res.Signal, res.TimedOut = r.ExitCode, r.Signal, r.TimedOut
 			res.Truncated = out.close()
-			res.Note = describe(res, s.cfg.CompileTimeout, cmem, s.cfg.MaxOutputBytes)
+			res.Note = describe(res, s.cfg.CompileTimeout, s.cfg.CompileTimeout, cmem, s.cfg.MaxOutputBytes)
 			if ctx.Err() != nil && !res.Truncated {
 				return res, ctx.Err()
 			}
@@ -231,13 +231,13 @@ func (s *Service) Execute(ctx context.Context, l *Language, code, stdin string, 
 	r, err := s.box.Run(ctx, sandbox.Spec{
 		Dir: dir, Argv: l.run, Env: l.env,
 		Stdin: strings.NewReader(stdin), Stdout: out.writer("stdout"), Stderr: out.writer("stderr"),
-		Limits: sandbox.Limits{WallTime: s.cfg.RunTimeout, MemoryMB: memory, MaxProcs: procs, FileSizeMB: 16, OpenFiles: 256},
+		Limits: sandbox.Limits{WallTime: s.cfg.RunTimeout, CPUTime: s.cfg.CPULimit, MemoryMB: memory, MaxProcs: procs, FileSizeMB: 16, OpenFiles: 256},
 	})
 	res.Phase = "run"
 	res.ExitCode, res.Signal, res.TimedOut = r.ExitCode, r.Signal, r.TimedOut
 	res.RuntimeMs = r.Duration.Milliseconds()
 	res.Truncated = out.close()
-	res.Note = describe(res, s.cfg.RunTimeout, memory, s.cfg.MaxOutputBytes)
+	res.Note = describe(res, s.cfg.RunTimeout, s.cfg.CPULimit, memory, s.cfg.MaxOutputBytes)
 	if res.Truncated {
 		// We cancelled it ourselves; that is not a client disconnect.
 		return res, nil
@@ -275,12 +275,20 @@ func copyTree(src, dst string) error {
 	})
 }
 
-func describe(r Result, timeout time.Duration, memMB, outBytes int) string {
+func describe(r Result, timeout, cpu time.Duration, memMB, outBytes int) string {
+	if cpu <= 0 || cpu > timeout {
+		cpu = timeout
+	}
+	cpuHit := time.Duration(r.RuntimeMs+r.CompileMs)*time.Millisecond >= cpu-time.Second
 	switch {
 	case r.Truncated:
 		return fmt.Sprintf("Output limit of %d KB exceeded; the program was stopped.", outBytes>>10)
 	case r.TimedOut:
 		return fmt.Sprintf("Time limit exceeded (%s); the program was stopped.", timeout)
+	case r.Signal == "SIGXCPU", r.Signal == "SIGKILL" && cpuHit && cpu < timeout:
+		// Each run is capped at one core, so CPU time can't outpace wall time:
+		// a kill after at least the CPU budget is the CPU limit, not memory.
+		return fmt.Sprintf("CPU time limit exceeded (%s of computation); the program was stopped.", cpu)
 	case r.Signal == "SIGKILL":
 		return fmt.Sprintf("Killed — most likely exceeded the %d MB memory limit.", memMB)
 	case r.Signal == "SIGXFSZ":

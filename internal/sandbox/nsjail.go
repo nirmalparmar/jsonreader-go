@@ -135,7 +135,7 @@ func (n *nsjail) Run(ctx context.Context, s Spec) (Result, error) {
 		"--user", id + ":" + id + ":1",
 		"--group", id + ":" + id + ":1",
 		"--time_limit", strconv.Itoa(wallSec),
-		"--rlimit_cpu", strconv.Itoa(wallSec),
+		"--rlimit_cpu", strconv.Itoa(l.cpuSeconds()),
 		"--rlimit_fsize", strconv.Itoa(max(l.FileSizeMB, 1)),
 		"--rlimit_nofile", strconv.Itoa(max(l.OpenFiles, 64)),
 		"--rlimit_stack", "64",

@@ -73,6 +73,7 @@ func (s *Service) handleLanguages(w http.ResponseWriter, r *http.Request) {
 		"languages": s.Languages(),
 		"limits": map[string]any{
 			"run_timeout_ms":     s.cfg.RunTimeout.Milliseconds(),
+			"cpu_limit_ms":       s.cfg.CPULimit.Milliseconds(),
 			"compile_timeout_ms": s.cfg.CompileTimeout.Milliseconds(),
 			"memory_mb":          s.cfg.MemoryMB,
 			"max_code_bytes":     s.cfg.MaxCodeBytes,

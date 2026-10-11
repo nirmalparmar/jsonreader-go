@@ -126,7 +126,7 @@ fi
 step "Configuration"
 if [[ ! -f .env ]]; then
   cp .env.example .env
-  sed -i "s/^COMPILER_MAX_CONCURRENT=.*/COMPILER_MAX_CONCURRENT=$(nproc)/" .env
+  sed -i "s/^COMPILER_MAX_CONCURRENT=[0-9]*/COMPILER_MAX_CONCURRENT=$(( 4 * $(nproc) ))/" .env
   chmod 600 .env
   echo "created .env (edit ALLOWED_ORIGINS there if your site is not jsonreader.com)"
 else

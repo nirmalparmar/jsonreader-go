@@ -38,7 +38,8 @@ type CompilerConfig struct {
 	MaxCodeBytes   int
 	MaxStdinBytes  int
 	MaxOutputBytes int
-	RunTimeout     time.Duration
+	RunTimeout     time.Duration // wall-clock limit per run
+	CPULimit       time.Duration // CPU-time limit per run (busy loops die sooner than sleepers)
 	CompileTimeout time.Duration
 	MemoryMB       int
 	MaxProcs       int
@@ -86,12 +87,13 @@ func Load() (*Config, error) {
 			NsjailPath:     env("NSJAIL_PATH", "nsjail"),
 			DockerImage:    env("SANDBOX_DOCKER_IMAGE", "common-service-runner:latest"),
 			WorkRoot:       env("SANDBOX_WORK_ROOT", os.TempDir()),
-			MaxConcurrent:  integer("COMPILER_MAX_CONCURRENT", max(2, runtime.NumCPU())),
+			MaxConcurrent:  integer("COMPILER_MAX_CONCURRENT", max(4, 4*runtime.NumCPU())),
 			QueueTimeout:   duration("COMPILER_QUEUE_TIMEOUT", 10*time.Second),
 			MaxCodeBytes:   integer("COMPILER_MAX_CODE_BYTES", 128<<10),
 			MaxStdinBytes:  integer("COMPILER_MAX_STDIN_BYTES", 64<<10),
 			MaxOutputBytes: integer("COMPILER_MAX_OUTPUT_BYTES", 1<<20),
-			RunTimeout:     duration("COMPILER_RUN_TIMEOUT", 10*time.Second),
+			RunTimeout:     duration("COMPILER_RUN_TIMEOUT", 120*time.Second),
+			CPULimit:       duration("COMPILER_CPU_LIMIT", 30*time.Second),
 			CompileTimeout: duration("COMPILER_COMPILE_TIMEOUT", 30*time.Second),
 			MemoryMB:       integer("COMPILER_MEMORY_MB", 256),
 			MaxProcs:       integer("COMPILER_MAX_PROCS", 64),

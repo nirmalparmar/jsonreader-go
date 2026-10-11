@@ -16,7 +16,7 @@ func (unsafeBox) Name() string { return "unsafe (no isolation — development on
 
 func (unsafeBox) Run(ctx context.Context, s Spec) (Result, error) {
 	l := s.Limits
-	script := "ulimit -t " + strconv.Itoa(int(l.WallTime.Seconds())+1) +
+	script := "ulimit -t " + strconv.Itoa(l.cpuSeconds()) +
 		" -f " + strconv.Itoa(max(l.FileSizeMB, 1)*2048) + // 512-byte blocks
 		" -n " + strconv.Itoa(max(l.OpenFiles, 64)) +
 		` 2>/dev/null; exec "$@"`
