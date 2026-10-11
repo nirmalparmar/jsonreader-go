@@ -1,0 +1,34 @@
+services:
+  api:
+    build:
+      context: .
+      args:
+        # Languages baked into the image. Fewer languages = smaller image:
+        #   all 11 ≈ 1.65 GB · without rust ≈ 1.14 GB · python,javascript,c ≈ 0.6 GB
+        LANGS: python,javascript,typescript,c,cpp,go,java,rust,ruby,php,bash
+    image: common-service:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080" # nginx terminates TLS in front; never expose directly
+    env_file: .env
+    volumes:
+      - data:/data
+    # nsjail needs to create namespaces, mount inside them and manage cgroups.
+    # These are the minimum grants; do NOT use privileged: true.
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp=unconfined  # Docker's default profile blocks unshare/mount that nsjail uses
+      - apparmor=unconfined
+    cgroup: private
+    tmpfs:
+      - /var/lib/sandbox:size=512m,mode=0711,exec # compiled programs run from here
+      - /tmp:size=256m
+    shm_size: 256m
+    mem_limit: 4g
+    pids_limit: 2048
+    ulimits:
+      nofile: 65536
+
+volumes:
+  data:

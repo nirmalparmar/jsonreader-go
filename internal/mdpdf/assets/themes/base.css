@@ -1,0 +1,66 @@
+/* Shared print foundation. Themes layer on top; user CSS layers last. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; }
+.markdown-body { word-wrap: break-word; overflow-wrap: anywhere; }
+.markdown-body img, .markdown-body svg, .markdown-body video { max-width: 100%; height: auto; }
+.markdown-body pre, .markdown-body .code-block, .markdown-body table,
+.markdown-body figure, .markdown-body blockquote, .markdown-body .math-display,
+.markdown-body pre.mermaid, .markdown-body .alert, .markdown-body img { break-inside: avoid; page-break-inside: avoid; }
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-body h4, .markdown-body h5, .markdown-body h6 { break-after: avoid; page-break-after: avoid; }
+.markdown-body p, .markdown-body li { orphans: 3; widows: 3; }
+.markdown-body thead { display: table-header-group; }
+.markdown-body tr { break-inside: avoid; page-break-inside: avoid; }
+
+.page-break, .pagebreak, .new-page { break-after: page; page-break-after: always; height: 0; margin: 0; border: 0; }
+.page-break-before { break-before: page; page-break-before: always; }
+.no-break { break-inside: avoid; page-break-inside: avoid; }
+.text-center, .center { text-align: center; }
+.text-right { text-align: right; }
+
+/* Code */
+.markdown-body pre { white-space: pre-wrap; word-break: break-word; }
+.markdown-body .code-block pre { margin: 0; }
+.markdown-body .code-block { position: relative; }
+.chroma .lntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
+.chroma .lntable { border-spacing: 0; padding: 0; margin: 0; border: 0; width: auto; display: table; }
+.chroma .lntable td, .chroma .lntable tr { border: 0 !important; background: transparent !important; padding: 0 !important; }
+.chroma .ln, .chroma .lnt { user-select: none; opacity: .55; margin-right: .8em; }
+
+/* Math & diagrams */
+.math-display { display: block; text-align: center; margin: 1em 0; overflow-x: auto; }
+.katex-display { margin: 0; }
+pre.mermaid { background: transparent !important; border: 0 !important; text-align: center; padding: 0 !important; white-space: pre; }
+pre.mermaid svg { max-width: 100%; height: auto; }
+
+/* Task lists */
+.markdown-body li:has(> input[type="checkbox"]) { list-style: none; }
+.markdown-body li > input[type="checkbox"] { margin: 0 .45em .2em -1.4em; vertical-align: middle; }
+
+/* GitHub-style alerts:  > [!NOTE]  > [!TIP]  > [!IMPORTANT]  > [!WARNING]  > [!CAUTION] */
+.markdown-body .alert { padding: .6em 1em; margin: 1em 0; border-left: .25em solid var(--alert-color); border-radius: 0 6px 6px 0; background: color-mix(in srgb, var(--alert-color) 8%, transparent); }
+.markdown-body .alert > :last-child { margin-bottom: 0; }
+.markdown-body .alert-title { display: flex; align-items: center; gap: .4em; font-weight: 600; color: var(--alert-color); margin: 0 0 .35em; }
+.markdown-body .alert-title svg { fill: currentColor; width: 1em; height: 1em; }
+.alert-note { --alert-color: #0969da; }
+.alert-tip { --alert-color: #1a7f37; }
+.alert-important { --alert-color: #8250df; }
+.alert-warning { --alert-color: #9a6700; }
+.alert-caution { --alert-color: #cf222e; }
+
+/* Table of contents */
+#toc-title { margin-top: 0; }
+#toc { margin-bottom: 2em; }
+#toc ul { list-style: none; padding-left: 1.2em; }
+#toc > ul { padding-left: 0; }
+#toc a { text-decoration: none; }
+
+/* Footnotes */
+.footnotes { font-size: .85em; margin-top: 2.5em; }
+.footnotes hr { margin-bottom: 1em; }
+
+mark { background: #fff3a3; color: inherit; padding: 0 .15em; border-radius: 2px; }
+kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8em; padding: .15em .4em; border: 1px solid #d0d7de; border-bottom-width: 2px; border-radius: 4px; background: #f6f8fa; }
+abbr[title] { text-decoration: underline dotted; }
+details > summary { cursor: default; font-weight: 600; }
