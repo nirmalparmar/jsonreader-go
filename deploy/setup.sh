@@ -80,7 +80,28 @@ systemctl enable --now nginx
 
 # ---------------------------------------------------------------------------
 step "Firewall (SSH + HTTP/HTTPS only)"
-if systemctl is-active -q firewalld 2>/dev/null; then
+WEB_RULE=(-p tcp -m state --state NEW -m multiport --dports "80,443" -j ACCEPT)
+# Oracle Cloud images end the INPUT chain with a catch-all REJECT that sits
+# before anything ufw adds, so 80/443 must be allowed directly above it.
+open_web_before_reject() {
+  local cmd=$1 file=$2 n
+  command -v "$cmd" >/dev/null || return 1
+  "$cmd" -L INPUT -n | awk '$1=="REJECT"' | grep -q . || return 1
+  while "$cmd" -D INPUT "${WEB_RULE[@]}" 2>/dev/null; do :; done   # drop misplaced copies
+  n=$("$cmd" -L INPUT -n --line-numbers | awk '$2=="REJECT" {print $1; exit}')
+  "$cmd" -I INPUT "$n" "${WEB_RULE[@]}"
+  # Persist by editing the boot rules file (not netfilter-persistent save,
+  # which would also freeze Docker's and ufw's runtime chains into it).
+  if [[ -f "$file" ]] && ! grep -q -- '--dports 80,443 -j ACCEPT' "$file"; then
+    sed -i "0,/^-A INPUT .*-j REJECT/s//-A INPUT ${WEB_RULE[*]}\n&/" "$file"
+  fi
+  return 0
+}
+if open_web_before_reject iptables /etc/iptables/rules.v4; then
+  open_web_before_reject ip6tables /etc/iptables/rules.v6 || true
+  echo "opened 80/443 above the image's REJECT rule:"
+  iptables -L INPUT -n --line-numbers | sed -n '1,9p'
+elif systemctl is-active -q firewalld 2>/dev/null; then
   firewall-cmd -q --permanent --add-service=ssh --add-service=http --add-service=https
   firewall-cmd -q --reload
   echo "firewalld services: $(firewall-cmd --list-services)"

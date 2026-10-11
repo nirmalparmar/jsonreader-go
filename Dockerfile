@@ -8,7 +8,7 @@
 #   docker build -t common-service .
 #   docker build --target toolchains -t common-service-runner .
 
-ARG GO_VERSION=1.24
+ARG GO_VERSION=1.26
 # Languages baked into the image (comma-separated subset), e.g.
 #   docker build --build-arg LANGS=python,javascript,c,cpp,java -t common-service .
 ARG LANGS=python,javascript,typescript,c,cpp,go,java,rust,ruby,php,bash
